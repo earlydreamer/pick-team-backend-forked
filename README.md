@@ -1,6 +1,7 @@
 # 📌 Pick Team: 팀 프로젝트 관리 올인원 협업 허브
 
 ![시연 화면](https://github.com/user-attachments/assets/816b5e41-489e-4227-86d9-2cd116ee99c1)
+**Frontend** : https://github.com/earlydreamer/pick-team-frontend-forked
 
 ## 🔥 프로젝트 개요
 
