@@ -92,11 +92,8 @@ public class SecurityConfig {
                         // 파일 다운로드는 컨트롤러를 통해서만 허용 (인증 필요)
                         .requestMatchers("/api/files/*/download").authenticated()
 
-                        // 전체 사용자 프로필 조회는 공개 (팀 매칭용)
-                        .requestMatchers("/api/users").permitAll()
-
-                        // 특정 사용자 프로필 조회는 공개 (팀 매칭용)
-                        .requestMatchers(HttpMethod.GET, "/api/users/{userId}").permitAll()
+                        // 사용자 프로필 조회(/api/users, /api/users/{userId})는 이메일·나이 등 개인정보를
+                        // 포함하므로 공개하지 않는다. anyRequest().authenticated()로 인증 필요
 
                         .requestMatchers("/api/users/email/request", "/api/users/email/verify").permitAll()
                         //웹소켓 서버 접속 요청에 대해 permitall설정
