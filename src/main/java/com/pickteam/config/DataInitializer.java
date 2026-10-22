@@ -24,12 +24,15 @@ import com.pickteam.domain.enums.UserRole;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+// 알려진 비밀번호의 테스트 계정을 만들므로 app.seed.test-data=true 일 때만 실행 (운영 기본 비활성)
 @Component
+@ConditionalOnProperty(name = "app.seed.test-data", havingValue = "true")
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
     
