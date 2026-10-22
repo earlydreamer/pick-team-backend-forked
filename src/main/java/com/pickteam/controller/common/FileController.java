@@ -1,7 +1,12 @@
 package com.pickteam.controller.common;
 
 import com.pickteam.domain.common.FileInfo;
+import com.pickteam.repository.board.PostAttachRepository;
+import com.pickteam.repository.chat.ChatAttachRepository;
 import com.pickteam.repository.common.FileInfoRepository;
+import com.pickteam.repository.kanban.KanbanTaskAttachRepository;
+import com.pickteam.repository.workspace.WorkspaceMemberRepository;
+import com.pickteam.service.user.AuthService;
 import com.pickteam.util.FileOperationLogger;
 import com.pickteam.util.FileOperationLogger.FileOperationType;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +32,11 @@ import java.util.regex.Pattern;
 public class FileController {
 
     private final FileInfoRepository fileInfoRepository;
+    private final PostAttachRepository postAttachRepository;
+    private final ChatAttachRepository chatAttachRepository;
+    private final KanbanTaskAttachRepository kanbanTaskAttachRepository;
+    private final WorkspaceMemberRepository workspaceMemberRepository;
+    private final AuthService authService;
 
     @Value("${app.upload.dir}")
     private String uploadDir;
@@ -44,6 +54,7 @@ public class FileController {
 
             // 2. 보안 검증 수행
             validateFileAccess(fileInfo);
+            validateWorkspaceMembership(fileInfo);
 
             // 3. 파일 다운로드 제공
             Path filePath = createSecureFilePath(fileInfo.getNameHashed());
@@ -71,6 +82,27 @@ public class FileController {
             FileOperationLogger.logOperationFailure(FileOperationType.FILE_DOWNLOAD,
                     "fileId: " + fileId, e);
             throw new RuntimeException("파일 다운로드에 실패했습니다.", e);
+        }
+    }
+
+    /**
+     * 파일 다운로드 권한 검증
+     * - 파일이 첨부된 게시글·채팅·칸반의 워크스페이스 활성 멤버만 허용
+     * - 어느 곳에도 활성 첨부로 연결되지 않은 파일은 거부
+     */
+    private void validateWorkspaceMembership(FileInfo fileInfo) {
+        Long accountId = authService.requireAuthentication();
+        Long fileId = fileInfo.getId();
+
+        Long workspaceId = postAttachRepository.findWorkspaceIdByFileInfoId(fileId)
+                .or(() -> chatAttachRepository.findWorkspaceIdByFileInfoId(fileId))
+                .or(() -> kanbanTaskAttachRepository.findWorkspaceIdByFileInfoId(fileId))
+                .orElseThrow(() -> new RuntimeException("파일 접근 권한이 없습니다."));
+
+        if (!workspaceMemberRepository.existsActiveByWorkspaceIdAndAccountId(workspaceId, accountId)) {
+            FileOperationLogger.logOperationWarning(FileOperationType.FILE_DOWNLOAD,
+                    "워크스페이스 비멤버의 다운로드 시도 - fileId: " + fileId + ", accountId: " + accountId);
+            throw new RuntimeException("파일 접근 권한이 없습니다.");
         }
     }
 
