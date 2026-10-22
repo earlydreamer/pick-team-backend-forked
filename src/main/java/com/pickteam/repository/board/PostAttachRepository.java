@@ -39,4 +39,14 @@ public interface PostAttachRepository extends JpaRepository<PostAttach, Long> {
          * @return 삭제되지 않은 첨부파일 (Optional)
          */
         Optional<PostAttach> findByIdAndIsDeletedFalse(Long id);
+
+        /**
+         * 파일이 첨부된 게시글의 워크스페이스 ID 조회 (다운로드 권한 검증용)
+         *
+         * @param fileInfoId 파일 정보 ID
+         * @return 워크스페이스 ID (활성 게시글 첨부가 아니면 empty)
+         */
+        @Query("SELECT pa.post.board.team.workspace.id FROM PostAttach pa " +
+                        "WHERE pa.fileInfo.id = :fileInfoId AND pa.isDeleted = false")
+        Optional<Long> findWorkspaceIdByFileInfoId(@Param("fileInfoId") Long fileInfoId);
 }
