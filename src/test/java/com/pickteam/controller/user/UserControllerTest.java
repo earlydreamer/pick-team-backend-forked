@@ -188,7 +188,7 @@ class UserControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.accessToken").value("mock-access-token"))
+                .andExpect(jsonPath("$.data.token").value("mock-access-token"))
                 .andExpect(jsonPath("$.data.refreshToken").value("mock-refresh-token"));
 
         verify(authService).authenticateWithClientInfo(any(), any(), any());
