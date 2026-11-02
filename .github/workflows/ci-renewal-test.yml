@@ -1,0 +1,124 @@
+name: renewal test
+
+# 리뉴얼 브랜치 테스트. 빈 MySQL·Redis 서비스 컨테이너를 쓰며 운영·dev 시크릿은 쓰지 않는다.
+on:
+  push:
+    branches:
+      - codex/renewal
+  pull_request:
+    branches:
+      - codex/renewal
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run tests against empty MySQL and Redis
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root-test
+          MYSQL_DATABASE: pickteam_test
+          MYSQL_USER: pickteam
+          MYSQL_PASSWORD: pickteam-test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot-test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+      redis:
+        image: redis:7.2
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Write test-only .env
+        # 테스트 전용 값이다. 실제 운영 값이 아니며 CI 안에서만 쓰고 버린다.
+        run: |
+          cat > .env <<'EOF'
+          DB_DRIVER=com.mysql.cj.jdbc.Driver
+          DB_URL=127.0.0.1:3306
+          DB_NAME=pickteam_test
+          DB_USER=pickteam
+          DB_PASSWORD=pickteam-test
+          DB_CHARACTER_ENCODING=UTF-8
+          DB_MYSQL_CHARACTER_SET_SERVER=utf8mb4
+          JPA_DDL_AUTO=create-drop
+          JPA_SHOW_SQL=false
+          JPA_OPEN_IN_VIEW=false
+          TZ=Asia/Seoul
+          PORT_NO=8080
+          LOG_LEVEL_ROOT=INFO
+          LOG_LEVEL_SQL=WARN
+          LOG_LEVEL_TX=WARN
+          LOG_LEVEL_INTERCEPTOR=WARN
+          MAIL_HOST=localhost
+          MAIL_PORT=2525
+          MAIL_USERNAME=test
+          MAIL_PASSWORD=test
+          MAIL_SMTP_AUTH=false
+          MAIL_SMTP_STARTTLS=false
+          MAIL_SMTP_STARTTLS_REQUIRED=false
+          MAIL_FROM=test@example.com
+          MAIL_FROM_NAME=test
+          BLOCKED_EMAIL_DOMAINS=example.invalid
+          JWT_SECRET=ci-test-only-jwt-secret-not-for-production-0123456789
+          JWT_EXPIRATION=3600000
+          JWT_REFRESH_EXPIRATION=1209600000
+          JWT_REFRESH_TOKEN_EXPIRATION_DAYS=14
+          ACCOUNT_GRACE_PERIOD_DAYS=30
+          ACCOUNT_DEFAULT_GRACE_PERIOD_DAYS=30
+          ACCOUNT_CLEANUP_SCHEDULE=0 0 3 * * *
+          FILE_UPLOAD_ENABLED=true
+          FILE_MAX_SIZE=10MB
+          FILE_MAX_REQUEST_SIZE=10MB
+          FILE_MAX_SIZE_BYTES=10485760
+          FILE_TEMP_DIR=/tmp
+          FILE_UPLOAD_DIR=/tmp/uploads
+          FILE_ALLOWED_EXTENSIONS=jpg,png
+          FILE_BASE_URL=http://localhost:8080/files
+          PROFILE_IMAGE_DIR=/tmp/profile
+          PROFILE_IMAGE_MAX_SIZE=5MB
+          PROFILE_IMAGE_ALLOWED_EXTENSIONS=jpg,png
+          PROFILE_IMAGE_ALLOWED_MIME_TYPES=image/jpeg,image/png
+          GOOGLE_CLIENT_ID=ci-test
+          GOOGLE_CLIENT_SECRET=ci-test
+          GOOGLE_REDIRECT_URI=http://localhost/callback/google
+          KAKAO_CLIENT_ID=ci-test
+          KAKAO_CLIENT_SECRET=ci-test
+          KAKAO_REDIRECT_URI=http://localhost/callback/kakao
+          FRONTEND_URL=http://localhost:5173
+          REDIS_HOST=127.0.0.1
+          REDIS_PORT=6379
+          REDIS_DATABASE=0
+          REDIS_PASSWORD=
+          LIVEKIT_API_KEY=ci-test
+          LIVEKIT_API_SECRET=ci-test
+          LIVEKIT_SERVER_IP=127.0.0.1
+          EOF
+
+      - name: Make mvnw executable
+        run: chmod +x ./mvnw
+
+      - name: Run tests
+        run: ./mvnw -B test
