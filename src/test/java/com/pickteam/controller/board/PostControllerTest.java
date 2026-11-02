@@ -123,7 +123,7 @@ class PostControllerTest {
                 .andExpect(jsonPath("$.content").value("게시글 내용입니다."))
                 .andExpect(jsonPath("$.authorName").value("홍길동"));
 
-        verify(postService).createPost(any(PostCreateDto.class), eq(accountId));
+        verify(postService).createPostByTeamId(eq(teamId), any(PostCreateDto.class), eq(accountId));
     }
 
     @Test

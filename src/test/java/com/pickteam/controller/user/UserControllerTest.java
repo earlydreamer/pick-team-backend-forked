@@ -35,11 +35,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Security 설정은 제외하고 Controller 로직만 검증
  */
 @WebMvcTest(
-        value = UserController.class,
+        value = {UserController.class, AuthController.class},
         useDefaultFilters = false,
         includeFilters = @ComponentScan.Filter(
                 type = FilterType.ASSIGNABLE_TYPE,
-                classes = UserController.class
+                classes = {UserController.class, AuthController.class}
         ),
         excludeAutoConfiguration = {
                 org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class,
