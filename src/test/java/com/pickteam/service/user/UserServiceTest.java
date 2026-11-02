@@ -1,5 +1,6 @@
 package com.pickteam.service.user;
 
+import com.pickteam.domain.enums.AuthProvider;
 import com.pickteam.domain.enums.UserRole;
 import com.pickteam.domain.user.Account;
 import com.pickteam.dto.user.*;
@@ -65,14 +66,14 @@ class UserServiceTest {
     void checkDuplicateId_ExistingEmail_ReturnsTrue() {
         // Given
         String email = "test@gmail.com";
-        given(accountRepository.existsByEmailAndDeletedAtIsNull(email)).willReturn(true);
+        given(accountRepository.existsByEmailAndProviderAndDeletedAtIsNull(email, AuthProvider.LOCAL)).willReturn(true);
 
         // When
         boolean result = userService.checkDuplicateId(email);
 
         // Then
         assertThat(result).isTrue();
-        verify(accountRepository).existsByEmailAndDeletedAtIsNull(email);
+        verify(accountRepository).existsByEmailAndProviderAndDeletedAtIsNull(email, AuthProvider.LOCAL);
     }
 
     @Test
@@ -80,14 +81,14 @@ class UserServiceTest {
     void checkDuplicateId_AvailableEmail_ReturnsFalse() {
         // Given
         String email = "available@gmail.com";
-        given(accountRepository.existsByEmailAndDeletedAtIsNull(email)).willReturn(false);
+        given(accountRepository.existsByEmailAndProviderAndDeletedAtIsNull(email, AuthProvider.LOCAL)).willReturn(false);
 
         // When
         boolean result = userService.checkDuplicateId(email);
 
         // Then
         assertThat(result).isFalse();
-        verify(accountRepository).existsByEmailAndDeletedAtIsNull(email);
+        verify(accountRepository).existsByEmailAndProviderAndDeletedAtIsNull(email, AuthProvider.LOCAL);
     }
 
     @Test
@@ -205,7 +206,7 @@ class UserServiceTest {
         given(validationService.isValidPassword(request.getPassword())).willReturn(true);
         
         // 중복 검사 Mock 설정
-        given(accountRepository.existsByEmailAndDeletedAtIsNull(request.getEmail())).willReturn(false);
+        given(accountRepository.existsByEmailAndProviderAndDeletedAtIsNull(request.getEmail(), AuthProvider.LOCAL)).willReturn(false);
         given(accountRepository.findWithdrawnAccountByEmail(request.getEmail())).willReturn(Optional.empty());
         
         // 이메일 인증 Mock 설정
@@ -226,7 +227,7 @@ class UserServiceTest {
         // Then
         verify(validationService).isValidEmail(request.getEmail());
         verify(validationService).isValidPassword(request.getPassword());
-        verify(accountRepository).existsByEmailAndDeletedAtIsNull(request.getEmail());
+        verify(accountRepository).existsByEmailAndProviderAndDeletedAtIsNull(request.getEmail(), AuthProvider.LOCAL);
         verify(emailService).isEmailVerified(request.getEmail());
         verify(authService).encryptPassword(request.getPassword());
         verify(accountRepository).save(any(Account.class));
@@ -242,13 +243,13 @@ class UserServiceTest {
         given(validationService.isValidPassword(request.getPassword())).willReturn(true);
         given(accountRepository.findWithdrawnAccountByEmail(request.getEmail())).willReturn(Optional.empty());
         given(emailService.isEmailVerified(request.getEmail())).willReturn(true);
-        given(accountRepository.existsByEmailAndDeletedAtIsNull(request.getEmail())).willReturn(true);
+        given(accountRepository.existsByEmailAndProviderAndDeletedAtIsNull(request.getEmail(), AuthProvider.LOCAL)).willReturn(true);
 
         // When & Then
         assertThatThrownBy(() -> userService.registerUser(request))
                 .isInstanceOf(DuplicateEmailException.class);
         
-        verify(accountRepository).existsByEmailAndDeletedAtIsNull(request.getEmail());
+        verify(accountRepository).existsByEmailAndProviderAndDeletedAtIsNull(request.getEmail(), AuthProvider.LOCAL);
     }
 
     @Test

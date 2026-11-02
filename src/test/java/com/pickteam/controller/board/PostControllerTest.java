@@ -79,7 +79,7 @@ class PostControllerTest {
                 2L
         );
 
-        given(postService.getPosts(eq(boardId), any()))
+        given(postService.getPostsByTeamId(eq(teamId), any()))
                 .willReturn(expectedPage);
 
         // when & then
@@ -109,7 +109,7 @@ class PostControllerTest {
 
         PostResponseDto expectedResponse = createPostResponseDto(1L, "새로운 게시글", accountId, "홍길동");
 
-        given(postService.createPost(any(PostCreateDto.class), eq(accountId)))
+        given(postService.createPostByTeamId(eq(teamId), any(PostCreateDto.class), eq(accountId)))
                 .willReturn(expectedResponse);
 
         // when & then

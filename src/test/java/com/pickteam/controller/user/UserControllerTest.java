@@ -136,7 +136,7 @@ class UserControllerTest {
         doNothing().when(userService).requestEmailVerification("test@gmail.com");
 
         // When & Then
-        mockMvc.perform(post("/api/users/email/request")
+        mockMvc.perform(post("/api/auth/email/request")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -157,7 +157,7 @@ class UserControllerTest {
         given(userService.verifyEmail("test@example.com", "123456")).willReturn(true);
 
         // When & Then
-        mockMvc.perform(post("/api/users/email/verify")
+        mockMvc.perform(post("/api/auth/email/verify")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -182,7 +182,7 @@ class UserControllerTest {
                 .willReturn(response);
 
         // When & Then
-        mockMvc.perform(post("/api/users/login")
+        mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
