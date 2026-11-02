@@ -35,11 +35,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Security 설정은 제외하고 Controller 로직만 검증
  */
 @WebMvcTest(
-        value = UserController.class,
+        value = {UserController.class, AuthController.class},
         useDefaultFilters = false,
         includeFilters = @ComponentScan.Filter(
                 type = FilterType.ASSIGNABLE_TYPE,
-                classes = UserController.class
+                classes = {UserController.class, AuthController.class}
         ),
         excludeAutoConfiguration = {
                 org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class,
@@ -136,7 +136,7 @@ class UserControllerTest {
         doNothing().when(userService).requestEmailVerification("test@gmail.com");
 
         // When & Then
-        mockMvc.perform(post("/api/users/email/request")
+        mockMvc.perform(post("/api/auth/email/request")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -157,7 +157,7 @@ class UserControllerTest {
         given(userService.verifyEmail("test@example.com", "123456")).willReturn(true);
 
         // When & Then
-        mockMvc.perform(post("/api/users/email/verify")
+        mockMvc.perform(post("/api/auth/email/verify")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -182,13 +182,13 @@ class UserControllerTest {
                 .willReturn(response);
 
         // When & Then
-        mockMvc.perform(post("/api/users/login")
+        mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.accessToken").value("mock-access-token"))
+                .andExpect(jsonPath("$.data.token").value("mock-access-token"))
                 .andExpect(jsonPath("$.data.refreshToken").value("mock-refresh-token"));
 
         verify(authService).authenticateWithClientInfo(any(), any(), any());
