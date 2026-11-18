@@ -1,7 +1,7 @@
 # OpenJdk 17 Deprecated에 따른 베이스 이미지 교체
 # 기존: FROM openjdk:17-jdk-slim
-# 변경: Eclipse Temurin JDK 17 
-FROM eclipse-temurin:17-jdk-alpine
+# 변경: Amazon Corretto JDK 17 (CVE-2026-114938 고정 빌드 17.0.21.1+2)
+FROM amazoncorretto:17-alpine
 
 # 2. 컨테이너 내에서 앱이 실행될 디렉토리 지정
 WORKDIR /app
