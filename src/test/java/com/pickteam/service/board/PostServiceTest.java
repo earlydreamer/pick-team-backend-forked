@@ -84,7 +84,7 @@ class PostServiceTest {
 
         // Mock 설정
         given(accountRepository.findById(accountId)).willReturn(Optional.of(mockAccount));
-        given(boardRepository.findById(boardId)).willReturn(Optional.of(mockBoard));
+        given(boardRepository.findByIdAndIsDeletedFalse(boardId)).willReturn(Optional.of(mockBoard));
         given(postRepository.save(any(Post.class))).willReturn(mockPost);
 
         // when
@@ -99,7 +99,7 @@ class PostServiceTest {
         assertThat(result.getBoardId()).isEqualTo(boardId);
 
         verify(accountRepository).findById(accountId);
-        verify(boardRepository).findById(boardId);
+        verify(boardRepository).findByIdAndIsDeletedFalse(boardId);
         verify(postRepository).save(any(Post.class));
     }
 
@@ -142,7 +142,7 @@ class PostServiceTest {
                 .build();
 
         given(accountRepository.findById(accountId)).willReturn(Optional.of(mockAccount));
-        given(boardRepository.findById(invalidBoardId)).willReturn(Optional.empty());
+        given(boardRepository.findByIdAndIsDeletedFalse(invalidBoardId)).willReturn(Optional.empty());
 
         // when & then
         assertThatThrownBy(() -> postService.createPost(request, accountId))
@@ -150,7 +150,7 @@ class PostServiceTest {
                 .hasMessageContaining("게시판을 찾을 수 없습니다");
 
         verify(accountRepository).findById(accountId);
-        verify(boardRepository).findById(invalidBoardId);
+        verify(boardRepository).findByIdAndIsDeletedFalse(invalidBoardId);
     }
 
     @Test
